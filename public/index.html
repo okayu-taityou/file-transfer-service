@@ -1,31 +1,153 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ファイルアップロード</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 50px;
-    }
-    form {
-      margin-top: 20px;
-    }
-    input[type="file"] {
-      margin-bottom: 10px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ファイル転送サービス</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 40px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            min-height: 100vh; 
+        }
+        .container { max-width: 600px; margin: 0 auto; text-align: center; }
+        h1 { font-size: 2.5em; margin-bottom: 30px; }
+        .upload-area { 
+            background: rgba(255,255,255,0.1); 
+            border: 2px dashed rgba(255,255,255,0.5); 
+            border-radius: 15px; 
+            padding: 50px 20px; 
+            margin: 30px 0; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+        }
+        .upload-area:hover { background: rgba(255,255,255,0.2); }
+        .upload-area.dragover { background: rgba(255,255,255,0.3); border-color: white; }
+        input[type="file"] { display: none; }
+        .upload-btn, .files-btn { 
+            display: inline-block; 
+            padding: 15px 30px; 
+            background: #4CAF50; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 25px; 
+            margin: 10px; 
+            cursor: pointer; 
+            border: none; 
+            font-size: 1.1em; 
+        }
+        .files-btn { background: #2196F3; }
+        .file-list { margin-top: 20px; text-align: left; }
+        .file-item { 
+            background: rgba(255,255,255,0.1); 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-radius: 5px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .remove-file { background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+    </style>
 </head>
 <body>
-  <h1>ファイルアップロードサービス</h1>
-  <form action="/upload" method="POST" enctype="multipart/form-data">
-    <input type="file" name="file" required>
-    <br>
-    <button type="submit">アップロード</button>
-  </form>
-  <p>アップロードされたファイルは以下のリンクからダウンロードできます:</p>
-  <p><a href="/uploads" target="_blank">アップロードされたファイルを見る</a></p>
+    <div class="container">
+        <h1>📤 ファイル転送サービス</h1>
+        <p>ファイルをドラッグ&ドロップするか、クリックしてファイルを選択してください</p>
+        
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <p>📁 ここにファイルをドロップまたはクリック</p>
+                <input type="file" id="fileInput" name="file" multiple>
+            </div>
+            <div id="fileList" class="file-list"></div>
+            <button type="submit" class="upload-btn">アップロード</button>
+        </form>
+        
+        <a href="/files" class="files-btn">アップロード済みファイル一覧</a>
+    </div>
+
+    <script>
+        const uploadArea = document.querySelector('.upload-area');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const uploadForm = document.getElementById('uploadForm');
+        let selectedFiles = [];
+
+        // ドラッグ&ドロップ
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            addFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            addFiles(files);
+        });
+
+        function addFiles(files) {
+            selectedFiles = [...selectedFiles, ...files];
+            updateFileList();
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    <button type="button" class="remove-file" onclick="removeFile(${index})">削除</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        uploadForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (selectedFiles.length === 0) {
+                alert('ファイルを選択してください');
+                return;
+            }
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => {
+                formData.append('file', file);
+            });
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    return response.text();
+                }
+                throw new Error('Upload failed');
+            }).then(html => {
+                document.body.innerHTML = html;
+            }).catch(error => {
+                alert('アップロードに失敗しました: ' + error.message);
+            });
+        });
+    </script>
 </body>
 </html>

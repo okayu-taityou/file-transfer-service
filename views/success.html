@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アップロード完了</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .success-file-block { background: rgba(255,255,255,0.1); padding: 20px; margin: 20px 0; border-radius: 10px; }
+        .success-file-label { font-weight: bold; margin-bottom: 5px; }
+        .success-file-url { background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px; margin-bottom: 10px; word-break: break-all; font-size: 0.9em; }
+        .share-url-box button { margin: 5px; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; background: #4CAF50; color: white; }
+        .share-url-box button:hover { background: #45a049; }
+        .preview-btn { background: #2196F3 !important; }
+        .preview-btn:hover { background: #1976D2 !important; }
+        .image-preview { max-width: 300px; max-height: 200px; border-radius: 8px; margin: 10px 0; display: block; }
+        .back-btn { display: inline-block; padding: 10px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+        .success-actions a { display: inline-block; margin: 10px; padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 アップロード完了！</h1>
+        <!-- ここに複数ファイル分のHTMLが挿入されます -->
+        <div class="success-files-list">
+          {{filesHtml}}
+        </div>
+        <div class="success-actions">
+          <a href="/">ファイルアップロード画面へ戻る</a>
+          <a href="/files">アップロード済みファイル一覧</a>
+        </div>
+        <a href="/" class="back-btn">← トップページに戻る</a>
+    </div>
+  <script>
+    // 各ファイルのコピーボタンにイベントリスナーを追加
+    document.querySelectorAll('.copy-url-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const url = this.getAttribute('data-url');
+        navigator.clipboard.writeText(url).then(() => {
+          this.textContent = 'コピー完了!';
+          setTimeout(() => this.textContent = 'コピー', 2000);
+        });
+      });
+    });
+  </script>
+  <footer>
+    &copy; 2025 Okayu File Transfer Service
+  </footer>
+</body>
+</html>
