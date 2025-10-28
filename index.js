@@ -16,19 +16,28 @@ if (!fs.existsSync(UPLOAD_FOLDER)) {
 }
 
 // AWS設定チェック
-const AWS_CONFIGURED = process.env.AWS_ACCESS_KEY_ID && 
-                      process.env.AWS_SECRET_ACCESS_KEY && 
-                      process.env.S3_BUCKET_NAME;
+// IAM Role使用時はアクセスキー不要
+const AWS_CONFIGURED = process.env.S3_BUCKET_NAME;
 
 // AWS S3の設定（設定されている場合のみ）
 let s3;
 if (AWS_CONFIGURED) {
-  s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  // IAM Roleがある場合は自動的に認証情報を取得
+  // ローカル開発時は.envから取得
+  const s3Config = {
     region: process.env.AWS_REGION || 'ap-southeast-2',
-  });
-  console.log('AWS S3 configured successfully');
+  };
+  
+  // ローカル開発用：アクセスキーが明示的に指定されている場合のみ使用
+  if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+    s3Config.accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+    s3Config.secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+    console.log('AWS S3 configured with access keys (local mode)');
+  } else {
+    console.log('AWS S3 configured with IAM Role (production mode)');
+  }
+  
+  s3 = new AWS.S3(s3Config);
 } else {
   console.log('AWS S3 not configured - using local file mode only');
 }

@@ -62,7 +62,34 @@ node setup-s3-cors.js
 - AWS S3使用時: 署名付きURL有効期限24時間
 - ローカルモード: `uploads/`フォルダに保存
 
-## 🔧 開発者向け
+## � デプロイ
+
+### AWS App Runnerへのデプロイ（推奨・無料枠あり）
+
+詳細な手順は [DEPLOY.md](./DEPLOY.md) を参照してください。
+
+**メリット**:
+- ✅ アクセスキー不要（IAM Role使用）
+- ✅ 自動HTTPS化
+- ✅ GitHubへのpushで自動デプロイ
+- ✅ 無料枠あり（月間2,000ビルド分）
+
+### ローカルでDockerを使用
+
+```bash
+# Dockerイメージをビルド
+docker build -t file-transfer-service .
+
+# コンテナを起動
+docker run -p 3005:3005 \
+  -e S3_BUCKET_NAME=your-bucket-name \
+  -e AWS_REGION=ap-southeast-2 \
+  -e AWS_ACCESS_KEY_ID=your-key \
+  -e AWS_SECRET_ACCESS_KEY=your-secret \
+  file-transfer-service
+```
+
+## �🔧 開発者向け
 
 ### ディレクトリ構造
 ```

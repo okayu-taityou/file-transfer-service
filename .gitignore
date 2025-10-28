@@ -1,5 +1,6 @@
 # 環境変数ファイル
 .env
+.env.production
 
 # Node.js
 node_modules/
